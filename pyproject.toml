@@ -1,0 +1,26 @@
+[project]
+name = "fastgdal2tiles"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Dag Wästberg", email = "dwastberg@gmail.com" }]
+dependencies = [
+    "gdal2tiles>=0.1.6",
+    "gdal>=3.8.0",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["scikit-build-core", "nanobind>=1.8.0", "wheel"]
+build-backend = "scikit_build_core.build"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "nanobind>=1.8.0",
+    "black>=23.11.0",
+    "setuptools>=69.0.2",
+]
+
+[tool.scikit-build]
+wheel.expand-macos-universal-tags = true
