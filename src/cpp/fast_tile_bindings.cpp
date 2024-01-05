@@ -38,13 +38,14 @@ std::vector<FASTTILER::tile_details> convert_tile_details(const nb::list &td_lis
 
 bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_zoom, size_t max_zoom, const nb::list &td_list)
 {
+
  std::cout << "render_tiles" << std::endl;
  auto tiles_details = convert_tile_details(td_list);
  std::cout << "tile details done" << std::endl;
- const auto rc = FASTTILER::RasterContainer(in_raster);
+// const auto rc = FASTTILER::RasterContainer(in_raster);
  std::cout << "raster container done" << std::endl;
 
- return FASTTILER::render_basetiles(rc, tiles_details, outdir);
+ return FASTTILER::render_basetiles(in_raster, tiles_details, outdir);
 
 }
 

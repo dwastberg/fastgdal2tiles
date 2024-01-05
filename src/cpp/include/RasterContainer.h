@@ -32,6 +32,8 @@ namespace FASTTILER
     {
 
     public:
+        RasterContainer() {
+        }
         bool hasAlpha;
         RasterContainer(const std::string &filename)
         {

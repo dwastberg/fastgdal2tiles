@@ -8,8 +8,8 @@
 
 namespace FASTTILER {
 
-    bool render_tile(const RasterContainer &rc, const tile_details td, std::string output_dir) {
-        auto tile = rc.get_subtile(td);
+    bool render_tile(const RasterContainer *rc, const tile_details td, std::string output_dir) {
+        auto tile = rc->get_subtile(td);
         if (tile.size() == 0)
             return false;
         output_dir.append("/").append(std::to_string(td.tz)).append("/").append(std::to_string(td.tx)).append("/").append(std::to_string(td.ty)).append(".png");
@@ -17,11 +17,22 @@ namespace FASTTILER {
         return true;
     }
 
-    bool render_basetiles(const RasterContainer &rc,const std::vector<tile_details> &tile_list, std::string out_dir )
+    bool render_basetiles(std::string in_raster,const std::vector<tile_details> &tile_list, std::string out_dir )
     {
+        fpng::fpng_init();
+        BS::thread_pool pool;
+        const auto tile_count = tile_list.size();
+        const auto thread_count = std::thread::hardware_concurrency();
+        std::vector<RasterContainer> rc_arr(thread_count);
+        for (size_t i = 0; i < thread_count; i++)
+        {
+            rc_arr[i] = RasterContainer(in_raster);
+        }
+
+
         for(const auto &td: tile_list )
         {
-            render_tile(rc, td, out_dir);
+            render_tile(&rc_arr[0], td, out_dir);
         }
         return true;
     }
