@@ -17,6 +17,14 @@ namespace FASTTILER {
         return true;
     }
 
+    void render_tile_from_threadpool(const std::vector<RasterContainer> &rc_list,const tile_details td, std::string output_dir)
+    {
+        auto thread_nr = BS::this_thread::get_index();
+        auto rc = &rc_list[thread_nr.value()];
+        render_tile(rc, td, output_dir);
+    }
+
+
     bool render_basetiles(std::string in_raster,const std::vector<tile_details> &tile_list, std::string out_dir )
     {
         fpng::fpng_init();
@@ -26,13 +34,14 @@ namespace FASTTILER {
         std::vector<RasterContainer> rc_arr(thread_count);
         for (size_t i = 0; i < thread_count; i++)
         {
-            rc_arr[i] = RasterContainer(in_raster);
+            rc_arr[i].set_raster(in_raster);
         }
-
 
         for(const auto &td: tile_list )
         {
-            render_tile(&rc_arr[0], td, out_dir);
+            // auto rc = &rc_arr[count % thread_count];
+            // render_tile(rc, td, out_dir);
+            pool.detach_task([rc_arr,td,out_dir](){render_tile_from_threadpool(rc_arr, td, out_dir);} );
         }
         return true;
     }
