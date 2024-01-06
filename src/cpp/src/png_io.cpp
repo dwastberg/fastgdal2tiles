@@ -8,7 +8,7 @@
 
 using namespace FASTTILER;
 
-bool PNG_IO::write_png_file(const char *file_name, uint32_t width, uint32_t height, uint32_t bands, std::vector<uint8_t> &buffer) {
+bool PNG_IO::write_png_file(const char *file_name, uint32_t width, uint32_t height, uint32_t bands, const std::vector<uint8_t> &buffer) {
     return fpng::fpng_encode_image_to_file(file_name, (void *)buffer.data(), width, height, bands, 0);
 
 }

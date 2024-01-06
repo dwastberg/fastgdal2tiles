@@ -12,7 +12,7 @@
 
 namespace FASTTILER::PNG_IO {
 
-    bool write_png_file(const char *file_name, uint32_t width, uint32_t height, uint32_t  bands, std::vector<uint8_t> &buffer);
+    bool write_png_file(const char *file_name, uint32_t width, uint32_t height, uint32_t  bands, const std::vector<uint8_t> &buffer);
 
     bool read_png_file(const char *file_name, uint32_t  &width, uint32_t &height, uint32_t  & num_bands, std::vector<uint8_t> &buffer);
 
