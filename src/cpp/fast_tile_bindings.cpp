@@ -39,14 +39,15 @@ std::vector<FASTTILER::tile_details> convert_tile_details(const nb::list &td_lis
 bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_zoom, size_t max_zoom, const nb::list &td_list)
 {
 
- std::cout << "render_tiles" << std::endl;
- auto tiles_details = convert_tile_details(td_list);
- std::cout << "tile details done" << std::endl;
-// const auto rc = FASTTILER::RasterContainer(in_raster);
- std::cout << "raster container done" << std::endl;
-
- return FASTTILER::render_basetiles(in_raster, tiles_details, outdir);
-
+    std::cout << "render_tiles" << std::endl;
+    auto tiles_details = convert_tile_details(td_list);
+    auto base_tiles_done = FASTTILER::render_basetiles(in_raster, tiles_details, outdir);
+    if (!base_tiles_done)
+    {
+        std::cout << "failed to render basetiles";
+        return false;
+    }
+    return true;
 }
 
 NB_MODULE(_fastgdal2tiles,m){
