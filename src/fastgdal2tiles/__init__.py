@@ -1,13 +1,16 @@
 import gdal2tiles
 from pathlib import Path
-from fastgdal2tiles.utils import create_out_dir_stucture
+from fastgdal2tiles.utils import create_out_dir_stucture  # , create_tile_pyramids
 from fastgdal2tiles import _fastgdal2tiles
 from time import time
+from osgeo import gdal
+from collections import defaultdict
 
 
 def main(
     in_file: Path, out_dir: Path, min_zoom: int, max_zoom: int, tms: bool, resume: bool
 ) -> bool:
+    start_time = time()
     print("Starting Tiling")
     options = {}
     if min_zoom is not None:
@@ -15,6 +18,7 @@ def main(
     options["resume"] = resume
     options["resampling"] = "near"
     options["tmscompatible"] = tms
+    options["quiet"] = True
 
     g2t_options = gdal2tiles.process_options(str(in_file), str(out_dir), options)
     job_info, tile_details = gdal2tiles.worker_tile_details(
@@ -22,13 +26,23 @@ def main(
     )
 
     create_out_dir_stucture(tile_details, job_info, out_dir)
-
+    # tile_pyramids = create_tile_pyramids(tile_details, job_info, out_dir)
+    # print(f"py pyramid size: {len(tile_pyramids)}")
+    # print(f"py tile_pyramid 21 size: {len(tile_pyramids[21])}")
+    # print(f"py tile_pyramid 20 size: {len(tile_pyramids[20])}")
+    # for k, v in tile_pyramids[16].items():
+    #     print(f"py tile_pyramid 21 {k}: {v[0]}")
     min_zoom = job_info.tminz
     max_zoom = job_info.tmaxz
-
+    print(f"setup time: {time()-start_time}")
     start_time = time()
     _fastgdal2tiles.render_tiles(
-        job_info.src_file, str(out_dir), min_zoom, max_zoom, tile_details
+        job_info.src_file,
+        str(out_dir),
+        min_zoom,
+        max_zoom,
+        tile_details,
+        job_info.tminmax,
     )
     print(f"rendering base tiles: {time()-start_time}")
 
@@ -36,6 +50,7 @@ def main(
 
 
 if __name__ == "__main__":
+    start_time = time()
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -117,3 +132,4 @@ if __name__ == "__main__":
         min_zoom = max_zoom = None
 
     main(in_file, out_dir, min_zoom, max_zoom, args.tms, args.resume)
+    print(f"Total time: {time()-start_time}")

@@ -6,6 +6,7 @@ set(SRC_FILES
     ${SRC_DIR}/fast_tile_bindings.cpp
     ${SRC_DIR}/src/fasttiler.cpp
     ${SRC_DIR}/src/png_io.cpp
+    ${SRC_DIR}/src/tile_fns.cpp
     ${SRC_DIR}/third_party/sqlite/sqlite3.c
     ${SRC_DIR}/third_party/fpng/fpng.cpp
 
