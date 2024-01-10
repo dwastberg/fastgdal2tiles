@@ -15,3 +15,4 @@ set(SRC_FILES
 nanobind_add_module(${BINDINGS} ${SRC_FILES})
 target_link_libraries(${BINDINGS} PRIVATE ${GDAL_LIBRARIES})
 install(TARGETS ${BINDINGS} DESTINATION fastgdal2tiles)
+

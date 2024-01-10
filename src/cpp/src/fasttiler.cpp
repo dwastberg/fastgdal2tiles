@@ -38,6 +38,7 @@ namespace FASTTILER {
     bool render_basetiles(std::string in_raster, const std::vector<tile_details> &tile_list, std::string out_dir) {
         fpng::fpng_init();
         BS::thread_pool pool;
+
         const auto tile_count = tile_list.size();
         const auto thread_count = pool.get_thread_count();
 
@@ -57,13 +58,27 @@ namespace FASTTILER {
         return true;
     }
 
-    bool create_tiles(const std::string file_name, const std::string output_dir, const std::vector<tile_details> &tile_job)
-
+    bool render_tile_pyramid(std::string in_raster, const td_map_t &td_map, const tile_pyramid_t &tile_pyramid, std::string out_dir)
     {
-        const auto rc = RasterContainer(file_name.c_str());
-        const auto tile_count = tile_job.size();
-        BS::thread_pool pool;
+        constexpr float render_pool_ratio = 0.5;
+        size_t thread_count = std::thread::hardware_concurrency();
+        size_t render_pool_size = (size_t) round(thread_count*render_pool_ratio);
+        size_t write_pool_size = thread_count - render_pool_size;
+        if (write_pool_size == 0)
+            write_pool_size = 1;
 
-        return true;
+        BS::thread_pool render_pool(render_pool_size);
+        BS::thread_pool write_pool(write_pool_size);
+
+        // each thread gets its own RasterContainer to avoid
+        // locking when reading from the same raster
+        std::vector<RasterContainer> rc_arr(thread_count);
+        for (size_t i = 0; i < thread_count; i++) {
+            rc_arr[i].set_raster(in_raster);
+        }
+
+
+        return true
     }
+
 }// namespace FASTTILER

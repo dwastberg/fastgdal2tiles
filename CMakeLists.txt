@@ -49,3 +49,4 @@ set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 
 # Add subdirectories
 add_subdirectory(src/)
+add_subdirectory(sandbox)
