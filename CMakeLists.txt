@@ -1,5 +1,5 @@
 # Minimum CMake version required
-cmake_minimum_required(VERSION 3.17...3.27)
+cmake_minimum_required(VERSION 3.18...3.27)
 
 # Project name
 project(fastgdal2tiles)
@@ -24,15 +24,14 @@ else()
 endif()
 
 
-set (Python_FIND_VIRTUALENV ONLY)
-find_package(Python 3.10 COMPONENTS Interpreter Development
-        REQUIRED)
+set(Python_FIND_VIRTUALENV ONLY)
+find_package(Python 3.10 COMPONENTS Interpreter Development REQUIRED)
+message(STATUS "python3: ${Python_EXECUTABLE}")
 
 execute_process(
         COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
         OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
-message(STATUS "python: ${Python_EXECUTABLE}")
-#message(STATUS "nanobind cmake dir: ${NB_DIR}")
+message(STATUS "nanobind cmake dir: ${NB_DIR}")
 list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
 
 find_package(nanobind CONFIG REQUIRED)
@@ -49,4 +48,4 @@ set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 
 # Add subdirectories
 add_subdirectory(src/)
-add_subdirectory(sandbox)
+add_subdirectory(sandbox/)

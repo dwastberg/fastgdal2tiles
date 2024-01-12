@@ -1,7 +1,13 @@
+# import sys
+#
+# sys.path.insert(0, "/Users/dwastberg/repos/fastgdal2tiles/src/")
+# print(sys.path)
+
+
 import gdal2tiles
 from pathlib import Path
-from fastgdal2tiles.utils import create_out_dir_stucture  # , create_tile_pyramids
-from fastgdal2tiles import _fastgdal2tiles
+from utils import create_out_dir_stucture  # , create_tile_pyramids
+import _fastgdal2tiles
 from time import time
 from osgeo import gdal
 from collections import defaultdict
@@ -25,7 +31,7 @@ def main(
         str(in_file), str(out_dir), g2t_options
     )
 
-    create_out_dir_stucture(tile_details, job_info, out_dir)
+    create_out_dir_stucture(tile_details, job_info, out_dir, clean=True)
     # tile_pyramids = create_tile_pyramids(tile_details, job_info, out_dir)
     # print(f"py pyramid size: {len(tile_pyramids)}")
     # print(f"py tile_pyramid 21 size: {len(tile_pyramids[21])}")
@@ -132,4 +138,6 @@ if __name__ == "__main__":
         min_zoom = max_zoom = None
 
     main(in_file, out_dir, min_zoom, max_zoom, args.tms, args.resume)
+    out_files = len(list((out_dir / str(max_zoom)).glob("**/*.png")))
+    print(f"rendered {out_files} files")
     print(f"Total time: {time()-start_time}")

@@ -42,7 +42,6 @@ bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_
         std::cout << "failed to render basetiles";
         return false;
     }
-    auto render_tile_pyramid = FASTTILER::render_tile_pyramid(in_raster, td_map, tile_pyramid, outdir);
     return true;
 }
 

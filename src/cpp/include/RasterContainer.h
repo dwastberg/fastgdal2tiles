@@ -12,6 +12,7 @@
 
 namespace FASTTILER {
     struct tile_details {
+        size_t querysize;
         size_t rx;
         size_t ry;
         size_t rxsize;

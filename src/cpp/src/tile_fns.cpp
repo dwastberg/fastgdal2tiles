@@ -15,6 +15,7 @@ td_vec_t convert_tile_details(const nb::list &td_list) {
     td_vec_t td_vec;
     for (const auto &pytd: td_list) {
         auto td = FASTTILER::tile_details();
+        td.querysize = nb::cast<size_t>(pytd.attr("querysize"));
         td.rx = nb::cast<size_t>(pytd.attr("rx"));
         td.ry = nb::cast<size_t>(pytd.attr("ry"));
         td.rxsize = nb::cast<size_t>(pytd.attr("rxsize"));

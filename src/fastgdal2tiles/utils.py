@@ -1,8 +1,10 @@
 from pathlib import Path
 from collections import defaultdict
+import shutil
 
-
-def create_out_dir_stucture(tile_details, job_info, out_dir):
+def create_out_dir_stucture(tile_details, job_info, out_dir, clean=False):
+    if clean:
+        shutil.rmtree(out_dir)
     for tile in tile_details:
         tile_path = Path(out_dir, str(tile.tz), str(tile.tx))
         tile_path.mkdir(parents=True, exist_ok=True)
