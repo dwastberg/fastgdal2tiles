@@ -96,14 +96,17 @@ namespace FASTTILER {
 
     bool render_overview_tiles(size_t tz, const tile_pyramid_t &tile_pyramid, std::string outdir) {
 
+        BS::thread_pool render_pool(std::thread::hardware_concurrency());
         auto overview_tiles = tile_pyramid.at(tz);
         std::cout << "rendering overview tiles for zoom level " << tz << std::endl;
         std::cout << "a total of " << overview_tiles.size() << " overview tiles" << std::endl;
         for (const auto &kv: overview_tiles) {
             auto tile_id = kv.first;
             auto tile_parts = kv.second;
-            render_overview_tile(tile_id, tile_parts, outdir);
+            render_pool.detach_task([tile_id, tile_parts, outdir]() { render_overview_tile(tile_id, tile_parts, outdir); });
+            // render_overview_tile(tile_id, tile_parts, outdir);
         }
+        render_pool.wait();
         return true;
     }
 
