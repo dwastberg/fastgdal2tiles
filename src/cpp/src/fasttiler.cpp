@@ -4,8 +4,8 @@
 #include "fasttiler.h"
 #include "BS_thread_pool.hpp"
 #include "RasterContainer.h"
-#include "png_io.h"
 #include "image_processing.h"
+#include "png_io.h"
 
 #define BANDS 4
 
@@ -39,8 +39,7 @@ namespace FASTTILER {
                 PNG_IO::write_tile(tile_data, td.querysize, td.querysize, BANDS, output_dir);
             });
             return;
-        }
-        else {
+        } else {
             write_pool->detach_task([tile_data, td, output_dir]() {
                 PNG_IO::write_tile(tile_data, td.wxsize, td.wysize, td.querysize, td.querysize, td.wx, td.wy, BANDS, output_dir);
             });
@@ -50,16 +49,16 @@ namespace FASTTILER {
     }
 
     void render_overview_tile(const tile_id_t &overview_tile, const overview_tile_parts_t &tile_parts, std::string output_dir) {
-        constexpr size_t tile_size =256;
+        constexpr size_t tile_size = 256;
 
         auto tx = std::get<0>(overview_tile);
         auto ty = std::get<1>(overview_tile);
         auto tz = std::get<2>(overview_tile);
 
 
-        std::vector<uint8_t> overview_tile_data( (tile_size * tile_size * 4 * BANDS));
-        std::vector<uint8_t> subtile_data( tile_size * tile_size * BANDS);
-        std::vector<uint8_t> resized_tile_data( tile_size * tile_size * BANDS);
+        std::vector<uint8_t> overview_tile_data((tile_size * tile_size * 4 * BANDS));
+        std::vector<uint8_t> subtile_data(tile_size * tile_size * BANDS);
+        std::vector<uint8_t> resized_tile_data(tile_size * tile_size * BANDS);
         DTCC::Timer build_tile_timer("build_overview_tile");
         for (const auto &tile_part: tile_parts) {
             auto subtile_id = tile_part.first;
@@ -70,14 +69,13 @@ namespace FASTTILER {
             auto sub_tz = std::get<2>(subtile_id);
 
 
-
             auto filename = output_dir + "/" + std::to_string(sub_tz) + "/" + std::to_string(sub_tx) + "/" + std::to_string(sub_ty) + ".png";
             auto tile_read_sucess = PNG_IO::read_png_file(filename.c_str(), tile_size, tile_size, BANDS, subtile_data);
             if (!tile_read_sucess) {
                 std::cout << "failed to read " << filename << std::endl;
                 continue;
             }
-            auto subtile_offset = (subtile_pos.first * BANDS) + (subtile_pos.second * (tile_size *2 ) * BANDS);
+            auto subtile_offset = (subtile_pos.first * BANDS) + (subtile_pos.second * (tile_size * 2) * BANDS);
             for (size_t y = 0; y < tile_size; y++) {
                 auto subtile_start = (y * tile_size * BANDS);
                 auto subtile_end = subtile_start + (tile_size * BANDS);
@@ -94,12 +92,9 @@ namespace FASTTILER {
         output_dir.append("/").append(std::to_string(tz)).append("/").append(std::to_string(tx)).append("/").append(std::to_string(ty)).append(".png");
         write_tile_timer.stop();
         PNG_IO::write_png_file(output_dir.c_str(), tile_size, tile_size, BANDS, resized_tile_data);
-
-
     }
 
-    bool render_overview_tiles(size_t tz,  const tile_pyramid_t &tile_pyramid, std::string outdir)
-    {
+    bool render_overview_tiles(size_t tz, const tile_pyramid_t &tile_pyramid, std::string outdir) {
 
         auto overview_tiles = tile_pyramid.at(tz);
         std::cout << "rendering overview tiles for zoom level " << tz << std::endl;
@@ -113,37 +108,11 @@ namespace FASTTILER {
     }
 
 
-    bool render_tiles(std::string in_raster, size_t min_zoom, size_t max_zoom, const std::vector<tile_details> &tile_list, const tile_pyramid_t &tile_pyramid, std::string out_dir)
-    {
-        fpng::fpng_init();
-
-        DTCC::Timer basetile_timer("basetiles");
-        auto basetiles_done = render_basetiles(in_raster, tile_list, out_dir);
-        if (!basetiles_done) {
-            std::cout << "failed to render basetiles";
-            return false;
-        }
-        basetile_timer.stop();
-        DTCC::Timer overview_timer("overview");
-        for (size_t tz = max_zoom - 1; tz >= min_zoom; tz--) {
-            auto overview_tiles_done = render_overview_tiles(tz, tile_pyramid, out_dir);
-            if (!overview_tiles_done) {
-                std::cout << "failed to render overview tiles";
-                return false;
-            }
-        }
-        overview_timer.stop();
-        DTCC::Timer::report("render_tiles");
-        return true;
-
-    }
-
-
     bool render_basetiles(std::string in_raster, const std::vector<tile_details> &tile_list, std::string out_dir) {
 
         constexpr float render_pool_ratio = 0.6;
         size_t total_thread_count = std::thread::hardware_concurrency();
-        size_t render_pool_size = (size_t) round(total_thread_count*render_pool_ratio);
+        size_t render_pool_size = (size_t) round(total_thread_count * render_pool_ratio);
         size_t write_pool_size = total_thread_count - render_pool_size;
         if (write_pool_size == 0)
             write_pool_size = 1;
@@ -173,25 +142,26 @@ namespace FASTTILER {
         return true;
     }
 
-    bool render_tile_pyramid(std::string in_raster, const td_map_t &td_map, const tile_pyramid_t &tile_pyramid, std::string out_dir)
-    {
-        constexpr float render_pool_ratio = 0.8;
-        size_t thread_count = std::thread::hardware_concurrency();
-        size_t render_pool_size = (size_t) round(thread_count*render_pool_ratio);
-        size_t write_pool_size = thread_count - render_pool_size;
-        if (write_pool_size == 0)
-            write_pool_size = 1;
-        BS::thread_pool render_pool(render_pool_size);
-        BS::thread_pool write_pool(write_pool_size);
+    bool render_tiles(std::string in_raster, size_t min_zoom, size_t max_zoom, const std::vector<tile_details> &tile_list, const tile_pyramid_t &tile_pyramid, std::string out_dir) {
+        fpng::fpng_init();
 
-        // each thread gets its own RasterContainer to avoid
-        // locking when reading from the same raster
-        std::vector<RasterContainer> rc_arr(thread_count);
-        for (size_t i = 0; i < thread_count; i++) {
-            rc_arr[i].set_raster(in_raster);
+        DTCC::Timer basetile_timer("basetiles");
+        auto basetiles_done = render_basetiles(in_raster, tile_list, out_dir);
+        if (!basetiles_done) {
+            std::cout << "failed to render basetiles";
+            return false;
         }
-
-
+        basetile_timer.stop();
+        DTCC::Timer overview_timer("overview");
+        for (size_t tz = max_zoom - 1; tz >= min_zoom; tz--) {
+            auto overview_tiles_done = render_overview_tiles(tz, tile_pyramid, out_dir);
+            if (!overview_tiles_done) {
+                std::cout << "failed to render overview tiles";
+                return false;
+            }
+        }
+        overview_timer.stop();
+        DTCC::Timer::report("render_tiles");
         return true;
     }
 
