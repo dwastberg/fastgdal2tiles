@@ -32,8 +32,10 @@ struct TileIDHash {
 
 typedef std::unordered_map<tile_id_t, FASTTILER::tile_details, TileIDHash> td_map_t;
 typedef std::vector<FASTTILER::tile_details> td_vec_t;
-typedef std::tuple<size_t, size_t> tile_pos_t;
-typedef std::unordered_map<size_t, std::unordered_map<tile_id_t, std::vector<std::pair<tile_id_t, tile_pos_t>>, TileIDHash>> tile_pyramid_t;
+typedef std::pair<size_t, size_t> tile_pos_t;
+typedef std::pair<tile_id_t, tile_pos_t> tile_pos_pair_t;
+typedef std::vector<tile_pos_pair_t> overview_tile_parts_t;
+typedef std::unordered_map<size_t, std::unordered_map<tile_id_t, overview_tile_parts_t , TileIDHash>> tile_pyramid_t;
 typedef std::vector<std::tuple<size_t, size_t, size_t, size_t>> tzminmax_t;
 
 td_map_t build_td_map(const td_vec_t &td_vec);

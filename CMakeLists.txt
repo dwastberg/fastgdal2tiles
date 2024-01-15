@@ -36,6 +36,8 @@ list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
 
 find_package(nanobind CONFIG REQUIRED)
 find_package(GDAL REQUIRED)
+#find_package(unofficial-sqlite3 CONFIG REQUIRED)
+
 message(STATUS "gdal include dirs: ${GDAL_INCLUDE_DIRS} ")
 include_directories(${GDAL_INCLUDE_DIRS})
 

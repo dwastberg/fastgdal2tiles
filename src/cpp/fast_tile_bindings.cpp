@@ -21,10 +21,13 @@ int add(int a, int b) {
 bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_zoom, size_t max_zoom, const nb::list &td_list, const nb::list &tzminmax_list) {
 
     std::cout << "render_tiles" << std::endl;
+
+
     auto tiles_details = convert_tile_details(td_list);
     auto td_map = build_td_map(tiles_details);
     auto tzminmax = convert_tzminmax(tzminmax_list);
     auto tile_pyramid = build_tile_pyramid(min_zoom, max_zoom, tzminmax);
+
 //    std::cout << "tile_pyramid size: " << tile_pyramid.size() << std::endl;
 //    std::cout << "tile_pyramid 21 size: " << tile_pyramid[21].size() << std::endl;
 //    std::cout << "tile_pyramid 20 size: " << tile_pyramid[20].size() << std::endl;
@@ -37,11 +40,13 @@ bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_
 //        std::cout << " " << std::get<1>(kv.second[0].second);
 //        std::cout << std::endl;
 //    }
-    auto base_tiles_done = FASTTILER::render_basetiles(in_raster, tiles_details, outdir);
+    auto base_tiles_done = FASTTILER::render_tiles(in_raster, min_zoom, max_zoom, tiles_details, tile_pyramid,outdir);
+
     if (!base_tiles_done) {
         std::cout << "failed to render basetiles";
         return false;
     }
+    // auto overview_tiles_done = FASTTILER::render_overview_tiles(in_raster, td_map, tile_pyramid, outdir);
     return true;
 }
 

@@ -60,16 +60,15 @@ namespace FASTTILER {
         //            GDALClose(in_raster);
         //        }
 
-        std::vector<uint8_t> get_subtile(const tile_details &tile) const {
+        std::vector<uint8_t> get_subtile(const tile_details &tile, size_t bands) const {
             const size_t size = tile.wxsize * tile.wysize;
-            std::vector<uint8_t> rgbData(size * 3);
+            std::vector<uint8_t> rgbData(size * bands,255);
 
             // Read data directly into rgbData
             {
-                // std::lock_guard<std::mutex> lock(read_raster_mutex);
-                auto err1 = in_raster->GetRasterBand(1)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 0, tile.wxsize, tile.wysize, GDT_Byte, 3, 3 * tile.wxsize);
-                auto err2 = in_raster->GetRasterBand(2)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 1, tile.wxsize, tile.wysize, GDT_Byte, 3, 3 * tile.wxsize);
-                auto err3 = in_raster->GetRasterBand(3)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 2, tile.wxsize, tile.wysize, GDT_Byte, 3, 3 * tile.wxsize);
+                auto err1 = in_raster->GetRasterBand(1)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 0, tile.wxsize, tile.wysize, GDT_Byte, bands, bands * tile.wxsize);
+                auto err2 = in_raster->GetRasterBand(2)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 1, tile.wxsize, tile.wysize, GDT_Byte, bands, bands * tile.wxsize);
+                auto err3 = in_raster->GetRasterBand(3)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 2, tile.wxsize, tile.wysize, GDT_Byte, bands, bands * tile.wxsize);
                 if (err1 != 0 || err2 != 0 || err3 != 0)
                     rgbData.clear();
             }

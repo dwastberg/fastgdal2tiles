@@ -73,9 +73,10 @@ tile_pyramid_t build_tile_pyramid(const size_t min_zoom, const size_t max_zoom, 
                             } else if (tx == 0 && x == 1) {
                                 tileposx = tile_size;
                             }
+
+                            tile_pos_t tile_pos = std::make_tuple(tileposx, tileposy);
+                            tile_pyramid[tz][low_tile_id].push_back(std::make_pair(tile_id, tile_pos));
                         }
-                        tile_pos_t tile_pos = std::make_tuple(tileposx, tileposy);
-                        tile_pyramid[tz][low_tile_id].push_back(std::make_pair(tile_id, tile_pos));
                     }
                 }
             }
