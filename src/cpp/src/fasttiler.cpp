@@ -2,6 +2,7 @@
 //
 
 #include "fasttiler.h"
+#include "TileInfo.h"
 #include "BS_thread_pool.hpp"
 #include "RasterContainer.h"
 #include "image_processing.h"
@@ -145,19 +146,26 @@ namespace FASTTILER {
         return true;
     }
 
-    bool render_tiles(std::string in_raster, size_t min_zoom, size_t max_zoom, const std::vector<tile_details> &tile_list, const tile_pyramid_t &tile_pyramid, std::string out_dir) {
+    bool render_top_N_levels(std::string in_raster, const std::vector<tile_details> &tile_list, std::string out_dir)
+    {
+        return true;
+    }
+
+    bool render_tiles(std::string in_raster, const TileInfo &ti, std::string out_dir) {
         fpng::fpng_init();
+//
+//        auto td_map = build_td_map(tile_list);
 
         DTCC::Timer basetile_timer("basetiles");
-        auto basetiles_done = render_basetiles(in_raster, tile_list, out_dir);
+        auto basetiles_done = render_basetiles(in_raster, ti.td_vec, out_dir);
         if (!basetiles_done) {
             std::cout << "failed to render basetiles";
             return false;
         }
         basetile_timer.stop();
         DTCC::Timer overview_timer("overview");
-        for (size_t tz = max_zoom - 1; tz >= min_zoom; tz--) {
-            auto overview_tiles_done = render_overview_tiles(tz, tile_pyramid, out_dir);
+        for (size_t tz = ti.max_zoom - 1; tz >= ti.min_zoom; tz--) {
+            auto overview_tiles_done = render_overview_tiles(tz, ti.tile_pyramid, out_dir);
             if (!overview_tiles_done) {
                 std::cout << "failed to render overview tiles";
                 return false;
