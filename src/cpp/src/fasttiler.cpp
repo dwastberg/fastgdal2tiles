@@ -26,7 +26,7 @@ namespace FASTTILER {
 //        return true;
 //    }
 
-    void render_tile_from_threadpool(const std::vector<RasterContainer> &rc_list, const tile_details td, const std::filesystem::path &output_dir, BS::thread_pool *write_pool) {
+    void render_tile_from_threadpool(const std::vector<RasterContainer> &rc_list, const tile_details td, const std::filesystem::path &img_path, BS::thread_pool *write_pool) {
         auto thread_nr = BS::this_thread::get_index();
         // auto render_pool = BS::this_thread::get_pool().value();
 
@@ -34,7 +34,6 @@ namespace FASTTILER {
         const auto tile_data = rc->get_subtile(td, BANDS);
 
 
-        auto img_path = output_dir / std::to_string(td.tz) / std::to_string(td.tx) / (std::to_string(td.ty) + ".png");
         if (tile_data.size() == 0)
             return;
         if (td.wxsize == td.querysize && td.wysize == td.querysize) {
@@ -51,13 +50,8 @@ namespace FASTTILER {
         //render_tile(rc, td, output_dir);
     }
 
-    void render_overview_tile(const tile_id_t &overview_tile, const overview_tile_parts_t &tile_parts, const std::filesystem::path &output_dir) {
+    void render_overview_tile(const overview_tile_parts_t &tile_parts, const std::filesystem::path &output_dir, const std::filesystem::path &out_img_path) {
         constexpr size_t tile_size = 256;
-
-        auto tx = std::get<0>(overview_tile);
-        auto ty = std::get<1>(overview_tile);
-        auto tz = std::get<2>(overview_tile);
-
 
         std::vector<uint8_t> overview_tile_data((tile_size * tile_size * 4 * BANDS));
         std::vector<uint8_t> subtile_data(tile_size * tile_size * BANDS);
@@ -92,13 +86,12 @@ namespace FASTTILER {
         FASTTILER::IMAGE_PROCESSING::shrink_tile(overview_tile_data, tile_size * 2, BANDS, tile_size, resized_tile_data);
         shrink_tile_timer.stop();
         DTCC::Timer write_tile_timer("write_overview_tile");
-        auto out_img_path = output_dir / std::to_string(tz) / std::to_string(tx) / (std::to_string(ty) + ".png");
         PNG_IO::write_png_file(out_img_path.string().c_str(), tile_size, tile_size, BANDS, resized_tile_data);
         write_tile_timer.stop();
 
     }
 
-    bool render_overview_tiles(size_t tz, const tile_pyramid_t &tile_pyramid, const std::filesystem::path &outdir) {
+    bool render_overview_tiles(size_t tz, const tile_pyramid_t &tile_pyramid, const std::filesystem::path &outdir, bool resume) {
 
         BS::thread_pool render_pool(std::thread::hardware_concurrency());
         auto overview_tiles = tile_pyramid.at(tz);
@@ -107,7 +100,14 @@ namespace FASTTILER {
         for (const auto &kv: overview_tiles) {
             auto tile_id = kv.first;
             auto tile_parts = kv.second;
-            render_pool.detach_task([tile_id, tile_parts, outdir]() { render_overview_tile(tile_id, tile_parts, outdir); });
+            auto tx = std::get<0>(tile_id);
+            auto ty = std::get<1>(tile_id);
+            auto tz = std::get<2>(tile_id);
+
+            auto img_path = outdir / std::to_string(tz) / std::to_string(tx) / (std::to_string(ty) + ".png");
+            if (resume && std::filesystem::exists(img_path))
+                continue;
+            render_pool.detach_task([tile_parts,outdir,img_path]() { render_overview_tile(tile_parts, outdir, img_path); });
             // render_overview_tile(tile_id, tile_parts, outdir);
         }
         render_pool.wait();
@@ -115,7 +115,7 @@ namespace FASTTILER {
     }
 
 
-    bool render_basetiles(std::string in_raster, const std::vector<tile_details> &tile_list, const std::filesystem::path &out_dir_path) {
+    bool render_basetiles(std::string in_raster, const std::vector<tile_details> &tile_list, const std::filesystem::path &out_dir_path, bool resume) {
 
         constexpr float render_pool_ratio = 0.6;
         size_t total_thread_count = std::thread::hardware_concurrency();
@@ -141,7 +141,10 @@ namespace FASTTILER {
         for (const auto &td: tile_list) {
             // auto rc = &rc_arr[count % thread_count];
             // render_tile(rc, td, out_dir);
-            render_pool.detach_task([&, out_dir_path]() { render_tile_from_threadpool(rc_arr, td, out_dir_path, &write_pool); });
+            auto img_path = out_dir_path / std::to_string(td.tz) / std::to_string(td.tx) / (std::to_string(td.ty) + ".png");
+            if (resume && std::filesystem::exists(img_path))
+                continue;
+            render_pool.detach_task([&,img_path]() { render_tile_from_threadpool(rc_arr, td, img_path, &write_pool); });
         }
         render_pool.wait();
         std::cout << "render pool done!" << std::endl;
@@ -154,7 +157,8 @@ namespace FASTTILER {
         return true;
     }
 
-    bool render_tiles(std::string in_raster, const TileInfo &ti, std::string out_dir) {
+    bool render_tiles(std::string in_raster, const TileInfo &ti, std::string out_dir, bool resume)
+    {
         fpng::fpng_init();
 //
 //        auto td_map = build_td_map(tile_list);
@@ -162,7 +166,7 @@ namespace FASTTILER {
         DTCC::Timer basetile_timer("basetiles");
         const std::filesystem::path out_dir_path(out_dir);
 
-        auto basetiles_done = render_basetiles(in_raster, ti.td_vec, out_dir_path);
+        auto basetiles_done = render_basetiles(in_raster, ti.td_vec, out_dir_path, resume);
         if (!basetiles_done) {
             std::cout << "failed to render basetiles";
             return false;
@@ -170,7 +174,7 @@ namespace FASTTILER {
         basetile_timer.stop();
         DTCC::Timer overview_timer("overview");
         for (size_t tz = ti.max_zoom - 1; tz >= ti.min_zoom; tz--) {
-            auto overview_tiles_done = render_overview_tiles(tz, ti.tile_pyramid, out_dir_path);
+            auto overview_tiles_done = render_overview_tiles(tz, ti.tile_pyramid, out_dir_path, resume);
             if (!overview_tiles_done) {
                 std::cout << "failed to render overview tiles";
                 return false;

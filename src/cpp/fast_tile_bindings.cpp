@@ -19,33 +19,16 @@ int add(int a, int b) {
 }
 
 
-bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_zoom, size_t max_zoom, const nb::list &td_list, const nb::list &tzminmax_list) {
+bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_zoom, size_t max_zoom, const nb::list &td_list, const nb::list &tzminmax_list, bool resume) {
 
     std::cout << "render_tiles" << std::endl;
 
     FASTTILER::TileInfo ti(min_zoom, max_zoom, tzminmax_list, td_list);
 
-//    auto tiles_details = convert_tile_details(td_list);
-//    auto td_map = build_td_map(tiles_details);
-//    auto tzminmax = convert_tzminmax(tzminmax_list);
-//    const auto tile_pyramid = build_tile_pyramid(min_zoom, max_zoom, tzminmax);
+    auto tiles_done = FASTTILER::render_tiles(in_raster, ti, outdir, resume);
 
-//    std::cout << "tile_pyramid size: " << tile_pyramid.size() << std::endl;
-//    std::cout << "tile_pyramid 21 size: " << tile_pyramid[21].size() << std::endl;
-//    std::cout << "tile_pyramid 20 size: " << tile_pyramid[20].size() << std::endl;
-//    for (const auto &kv: tile_pyramid[16]) {
-//        std::cout << "tile_pyramid 16: " << std::get<0>(kv.first) << " " << std::get<1>(kv.first) << " " << std::get<2>(kv.first);
-//        std::cout << " " << std::get<0>(kv.second[0].first);
-//        std::cout << " " << std::get<1>(kv.second[0].first);
-//        std::cout << " " << std::get<2>(kv.second[0].first);
-//        std::cout << " " << std::get<0>(kv.second[0].second);
-//        std::cout << " " << std::get<1>(kv.second[0].second);
-//        std::cout << std::endl;
-//    }
-    auto base_tiles_done = FASTTILER::render_tiles(in_raster, ti ,outdir);
-
-    if (!base_tiles_done) {
-        std::cout << "failed to render basetiles";
+    if (!tiles_done) {
+        std::cout << "failed to render tiles";
         return false;
     }
     // auto overview_tiles_done = FASTTILER::render_overview_tiles(in_raster, td_map, tile_pyramid, outdir);

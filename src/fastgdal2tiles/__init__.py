@@ -49,6 +49,7 @@ def main(
         max_zoom,
         tile_details,
         job_info.tminmax,
+        bool(resume),
     )
     print(f"rendering base tiles: {time()-start_time}")
 
