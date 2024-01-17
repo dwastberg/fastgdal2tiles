@@ -3,14 +3,17 @@
 
 #include "fasttiler.h"
 #include "TileInfo.h"
-#include "BS_thread_pool.hpp"
+
 #include "RasterContainer.h"
 #include "image_processing.h"
 #include "png_io.h"
 
 #define BANDS 4
 
+#include "BS_thread_pool.hpp"
 #include "logging/Timer.h"
+#include <indicators/cursor_control.hpp>
+#include <indicators/progress_bar.hpp>
 
 #include <filesystem>
 
@@ -137,15 +140,38 @@ namespace FASTTILER {
         for (size_t i = 0; i < render_thread_count; i++) {
             rc_arr[i].set_raster(in_raster);
         }
-
+        size_t skipped_tiles = 0;
         for (const auto &td: tile_list) {
             // auto rc = &rc_arr[count % thread_count];
             // render_tile(rc, td, out_dir);
             auto img_path = out_dir_path / std::to_string(td.tz) / std::to_string(td.tx) / (std::to_string(td.ty) + ".png");
-            if (resume && std::filesystem::exists(img_path))
+            if (resume && std::filesystem::exists(img_path)) {
+                skipped_tiles++;
                 continue;
+            }
             render_pool.detach_task([&,img_path]() { render_tile_from_threadpool(rc_arr, td, img_path, &write_pool); });
         }
+        indicators::ProgressBar bar{
+                indicators::option::BarWidth{50},
+                indicators::option::Start{"["},
+                indicators::option::Fill{"="},
+                indicators::option::Lead{">"},
+                indicators::option::Remainder{" "},
+                indicators::option::End{"]"},
+                indicators::option::PostfixText{"Rendering basetiles"},
+//                indicators::option::ForegroundColor{indicators::Color::green},
+//                indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
+        };
+
+        float tiles_todo_count = tile_count - skipped_tiles;
+        indicators::show_console_cursor(false);
+        while (render_pool.get_tasks_total() > 0) {
+            int pct_done = static_cast<int>( ((tiles_todo_count - render_pool.get_tasks_total())/tile_count) * 100);
+            bar.set_progress(pct_done);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        bar.set_progress(100);
+        indicators::show_console_cursor(true);
         render_pool.wait();
         std::cout << "render pool done!" << std::endl;
         write_pool.wait();
