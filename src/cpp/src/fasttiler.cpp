@@ -94,12 +94,14 @@ namespace FASTTILER {
 
     }
 
-    bool render_overview_tiles(size_t tz, const tile_pyramid_t &tile_pyramid, const std::filesystem::path &outdir, bool resume) {
+    bool render_overview_tiles(size_t tz, const tile_pyramid_t &tile_pyramid, const std::filesystem::path &outdir, bool resume = false, bool progress_bar = true) {
 
         BS::thread_pool render_pool(std::thread::hardware_concurrency());
         auto overview_tiles = tile_pyramid.at(tz);
-        std::cout << "rendering overview tiles for zoom level " << tz << std::endl;
-        std::cout << "a total of " << overview_tiles.size() << " overview tiles" << std::endl;
+//        std::cout << "rendering overview tiles for zoom level " << tz << std::endl;
+//        std::cout << "a total of " << overview_tiles.size() << " overview tiles" << std::endl;
+        const size_t tile_count = overview_tiles.size();
+        size_t skipped_tiles = 0;
         for (const auto &kv: overview_tiles) {
             auto tile_id = kv.first;
             auto tile_parts = kv.second;
@@ -108,21 +110,49 @@ namespace FASTTILER {
             auto tz = std::get<2>(tile_id);
 
             auto img_path = outdir / std::to_string(tz) / std::to_string(tx) / (std::to_string(ty) + ".png");
-            if (resume && std::filesystem::exists(img_path))
+            if (resume && std::filesystem::exists(img_path)) {
+                skipped_tiles++;
                 continue;
+            }
+
             render_pool.detach_task([tile_parts,outdir,img_path]() { render_overview_tile(tile_parts, outdir, img_path); });
             // render_overview_tile(tile_id, tile_parts, outdir);
+        }
+        if (progress_bar) {
+            indicators::ProgressBar bar{
+                    indicators::option::BarWidth{50},
+                    indicators::option::Start{"["},
+                    indicators::option::Fill{"="},
+                    indicators::option::Lead{">"},
+                    indicators::option::Remainder{"."},
+                    indicators::option::End{"]"},
+                    indicators::option::PostfixText{"Rendering z" + std::to_string(tz) + " overview tiles"},
+                    indicators::option::ShowPercentage{true},
+                    //                indicators::option::ForegroundColor{indicators::Color::green},
+                    //                indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
+            };
+
+            float tiles_todo_count = tile_count - skipped_tiles;
+            indicators::show_console_cursor(false);
+            while (render_pool.get_tasks_total() > 0) {
+                int pct_done = static_cast<int>(((tiles_todo_count - render_pool.get_tasks_total()) / tile_count) * 100);
+                bar.set_progress(pct_done);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+            bar.set_progress(100);
+            indicators::show_console_cursor(true);
         }
         render_pool.wait();
         return true;
     }
 
 
-    bool render_basetiles(std::string in_raster, const std::vector<tile_details> &tile_list, const std::filesystem::path &out_dir_path, bool resume) {
-
+    bool render_basetiles(std::string in_raster, const std::vector<tile_details> &tile_list, const std::filesystem::path &out_dir_path, bool resume= false, bool progress_bar = true)
+    {
         constexpr float render_pool_ratio = 0.6;
         size_t total_thread_count = std::thread::hardware_concurrency();
         size_t render_pool_size = (size_t) round(total_thread_count * render_pool_ratio);
+        size_t tz = tile_list[0].tz;
         size_t write_pool_size = total_thread_count - render_pool_size;
         if (write_pool_size == 0)
             write_pool_size = 1;
@@ -151,36 +181,77 @@ namespace FASTTILER {
             }
             render_pool.detach_task([&,img_path]() { render_tile_from_threadpool(rc_arr, td, img_path, &write_pool); });
         }
-        indicators::ProgressBar bar{
-                indicators::option::BarWidth{50},
-                indicators::option::Start{"["},
-                indicators::option::Fill{"="},
-                indicators::option::Lead{">"},
-                indicators::option::Remainder{" "},
-                indicators::option::End{"]"},
-                indicators::option::PostfixText{"Rendering basetiles"},
-//                indicators::option::ForegroundColor{indicators::Color::green},
-//                indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
-        };
+        if (progress_bar) {
+            indicators::ProgressBar bar{
+                    indicators::option::BarWidth{50},
+                    indicators::option::Start{"["},
+                    indicators::option::Fill{"="},
+                    indicators::option::Lead{">"},
+                    indicators::option::Remainder{"."},
+                    indicators::option::End{"]"},
+                    indicators::option::PostfixText{"Rendering z"+std::to_string(tz) + " basetiles"},
+                    indicators::option::ShowPercentage{true}
+                    //                indicators::option::ForegroundColor{indicators::Color::green},
+                    //                indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
+            };
 
-        float tiles_todo_count = tile_count - skipped_tiles;
-        indicators::show_console_cursor(false);
-        while (render_pool.get_tasks_total() > 0) {
-            int pct_done = static_cast<int>( ((tiles_todo_count - render_pool.get_tasks_total())/tile_count) * 100);
-            bar.set_progress(pct_done);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            float tiles_todo_count = tile_count - skipped_tiles;
+            indicators::show_console_cursor(false);
+            while (render_pool.get_tasks_total() > 0) {
+                int pct_done = static_cast<int>(((tiles_todo_count - render_pool.get_tasks_total()) / tile_count) * 100);
+                bar.set_progress(pct_done);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+            bar.set_progress(100);
+            indicators::show_console_cursor(true);
         }
-        bar.set_progress(100);
-        indicators::show_console_cursor(true);
         render_pool.wait();
-        std::cout << "render pool done!" << std::endl;
+        // std::cout << "render pool done!" << std::endl;
         write_pool.wait();
         return true;
     }
 
-    bool render_top_N_levels(std::string in_raster, const std::vector<tile_details> &tile_list, std::string out_dir)
+    bool render_top_N_levels(std::string in_raster, size_t n, const TileInfo &tile_info, std::filesystem::path out_dir, bool resume)
     {
-        return true;
+        if (n==1)
+            return render_basetiles(in_raster, tile_info.td_vec, out_dir);
+        constexpr float render_pool_ratio = 0.6;
+        size_t total_thread_count = std::thread::hardware_concurrency();
+        size_t render_pool_size = (size_t) round(total_thread_count * render_pool_ratio);
+        size_t tz = tile_info.max_zoom;
+        size_t write_pool_size = total_thread_count - render_pool_size;
+        if (write_pool_size == 0)
+            write_pool_size = 1;
+        std::cout << "render pool: " << std::to_string(render_pool_size) << " write pool: " << std::to_string(write_pool_size) << std::endl;
+
+        BS::thread_pool render_pool(render_pool_size);
+        BS::thread_pool write_pool(write_pool_size);
+
+        size_t top_z = tile_info.max_zoom;
+        auto overview_tiles = tile_info.tile_pyramid.at(top_z-1);
+        std::vector<uint8_t> tile_0(256*256*BANDS);
+        std::vector<uint8_t> tile_1(256*256*BANDS);
+        std::vector<uint8_t> tile_2(256*256*BANDS);
+        std::vector<uint8_t> tile_3(256*256*BANDS);
+        std::vector<uint8_t> overview_tile(256*256*4*BANDS);
+        size_t skipped_tiles = 0;
+        for (const auto &kv: overview_tiles) {
+            auto tile_id = kv.first;
+            auto tile_parts = kv.second;
+            auto tx = std::get<0>(tile_id);
+            auto ty = std::get<1>(tile_id);
+            auto tz = std::get<2>(tile_id);
+
+            auto img_path = out_dir / std::to_string(tz) / std::to_string(tx) / (std::to_string(ty) + ".png");
+            if (resume && std::filesystem::exists(img_path)) {
+                skipped_tiles++;
+                continue;
+            }
+
+            render_pool.detach_task([tile_parts,out_dir,img_path]() { render_overview_tile(tile_parts, out_dir, img_path); });
+            // render_overview_tile(tile_id, tile_parts, outdir);
+        }
+    return true;
     }
 
     bool render_tiles(std::string in_raster, const TileInfo &ti, std::string out_dir, bool resume)
