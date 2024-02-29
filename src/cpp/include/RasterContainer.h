@@ -46,6 +46,7 @@ namespace FASTTILER {
             }
             hasAlpha = in_raster->GetRasterCount() == 4;
         }
+
         bool set_raster(const std::string &filename) {
             auto c_filename = filename.c_str();
             in_raster = (GDALDataset *) GDALOpen(c_filename, GA_ReadOnly);
@@ -69,8 +70,14 @@ namespace FASTTILER {
                 auto err1 = in_raster->GetRasterBand(1)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 0, tile.wxsize, tile.wysize, GDT_Byte, bands, bands * tile.wxsize);
                 auto err2 = in_raster->GetRasterBand(2)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 1, tile.wxsize, tile.wysize, GDT_Byte, bands, bands * tile.wxsize);
                 auto err3 = in_raster->GetRasterBand(3)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 2, tile.wxsize, tile.wysize, GDT_Byte, bands, bands * tile.wxsize);
+
                 if (err1 != 0 || err2 != 0 || err3 != 0)
                     rgbData.clear();
+                else if (hasAlpha) {
+                    auto err4 = in_raster->GetRasterBand(4)->RasterIO(GF_Read, tile.rx, tile.ry, tile.rxsize, tile.rysize, rgbData.data() + 3, tile.wxsize, tile.wysize, GDT_Byte, bands, bands * tile.wxsize);
+                    if (err4 != 0)
+                        rgbData.clear();
+                }
             }
 
 
