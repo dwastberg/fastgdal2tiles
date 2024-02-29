@@ -10,7 +10,7 @@ from utils import create_out_dir_stucture  # , create_tile_pyramids
 import _fastgdal2tiles
 from time import time
 from osgeo import gdal
-from collections import defaultdict
+gdal.DontUseExceptions()
 
 
 def main(
