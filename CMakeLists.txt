@@ -41,13 +41,14 @@ find_package(GDAL REQUIRED)
 message(STATUS "gdal include dirs: ${GDAL_INCLUDE_DIRS} ")
 include_directories(${GDAL_INCLUDE_DIRS})
 
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/third_party)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/include)
+include_directories(SYSTEM src/third_party)
+include_directories(src/include)
 
 # Set installation directory
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/src)
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
-
-# Add subdirectories
-add_subdirectory(src/)
+#
+## Add subdirectories
+#add_subdirectory(src/)
 add_subdirectory(sandbox/)
+add_executable(fastgdal2tiles src/fastgdal2tiles.cpp)
