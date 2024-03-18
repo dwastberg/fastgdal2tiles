@@ -7,9 +7,11 @@
 import gdal2tiles
 from pathlib import Path
 from utils import create_out_dir_stucture  # , create_tile_pyramids
-import _fastgdal2tiles
+
+# import _fastgdal2tiles
 from time import time
 from osgeo import gdal
+
 gdal.DontUseExceptions()
 
 
@@ -41,17 +43,17 @@ def main(
     min_zoom = job_info.tminz
     max_zoom = job_info.tmaxz
     print(f"setup time: {time()-start_time}")
-    start_time = time()
-    _fastgdal2tiles.render_tiles(
-        job_info.src_file,
-        str(out_dir),
-        min_zoom,
-        max_zoom,
-        tile_details,
-        job_info.tminmax,
-        bool(resume),
-    )
-    print(f"rendering base tiles: {time()-start_time}")
+    # start_time = time()
+    # _fastgdal2tiles.render_tiles(
+    #     job_info.src_file,
+    #     str(out_dir),
+    #     min_zoom,
+    #     max_zoom,
+    #     tile_details,
+    #     job_info.tminmax,
+    #     bool(resume),
+    # )
+    # print(f"rendering base tiles: {time()-start_time}")
 
     return True
 

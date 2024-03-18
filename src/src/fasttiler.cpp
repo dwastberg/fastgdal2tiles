@@ -39,6 +39,8 @@ namespace FASTTILER {
 
         if (tile_data.size() == 0)
             return;
+        std::filesystem::path out_dir_path = img_path.parent_path();
+        std::filesystem::create_directories(out_dir_path);
         if (td.wxsize == td.querysize && td.wysize == td.querysize) {
             write_pool->detach_task([tile_data, td, img_path]() {
                 PNG_IO::write_tile(tile_data, td.querysize, td.querysize, BANDS, img_path.string());
@@ -110,6 +112,7 @@ namespace FASTTILER {
             auto tz = std::get<2>(tile_id);
 
             auto img_path = outdir / std::to_string(tz) / std::to_string(tx) / (std::to_string(ty) + ".png");
+            std::filesystem::create_directories(img_path.parent_path());
             if (resume && std::filesystem::exists(img_path)) {
                 skipped_tiles++;
                 continue;
@@ -254,7 +257,7 @@ namespace FASTTILER {
     return true;
     }
 
-    bool render_tiles(std::string in_raster, const TileInfo &ti, std::string out_dir, bool resume)
+    bool render_tiles(std::string in_raster, const TileInfo &tile_info, std::string out_dir, bool resume)
     {
         fpng::fpng_init();
 //
@@ -263,15 +266,17 @@ namespace FASTTILER {
         DTCC::Timer basetile_timer("basetiles");
         const std::filesystem::path out_dir_path(out_dir);
 
-        auto basetiles_done = render_basetiles(in_raster, ti.td_vec, out_dir_path, resume);
+        const std::vector<tile_details> tile_list = tile_info.td_vec;
+
+        auto basetiles_done = render_basetiles(in_raster, tile_list, out_dir_path, resume);
         if (!basetiles_done) {
             std::cout << "failed to render basetiles";
             return false;
         }
         basetile_timer.stop();
         DTCC::Timer overview_timer("overview");
-        for (size_t tz = ti.max_zoom - 1; tz >= ti.min_zoom; tz--) {
-            auto overview_tiles_done = render_overview_tiles(tz, ti.tile_pyramid, out_dir_path, resume);
+        for (size_t tz = tile_info.max_zoom - 1; tz >= tile_info.min_zoom; tz--) {
+            auto overview_tiles_done = render_overview_tiles(tz, tile_info.tile_pyramid, out_dir_path, resume);
             if (!overview_tiles_done) {
                 std::cout << "failed to render overview tiles";
                 return false;

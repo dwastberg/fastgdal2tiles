@@ -10,23 +10,10 @@
 #include <mutex>
 #include <vector>
 
+#include "TileInfo.h"
+
 namespace FASTTILER {
-    struct tile_details {
-        size_t querysize;
-        size_t rx;
-        size_t ry;
-        size_t rxsize;
-        size_t rysize;
 
-        size_t tx;
-        size_t ty;
-        size_t tz;
-
-        size_t wx;
-        size_t wy;
-        size_t wxsize;
-        size_t wysize;
-    };
 
     class RasterContainer {
         // mutable std::mutex read_raster_mutex;

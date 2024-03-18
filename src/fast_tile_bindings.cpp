@@ -3,7 +3,7 @@
 //
 
 #include "RasterContainer.h"
-#include "TileInfo.h"
+#include "TileInfo_py.h"
 #include "fasttiler.h"
 #include "tile_fns.h"
 #include <nanobind/nanobind.h>
@@ -23,7 +23,7 @@ bool render_tiles(const std::string &in_raster, std::string &outdir, size_t min_
 
     std::cout << "render_tiles" << std::endl;
 
-    FASTTILER::TileInfo ti(min_zoom, max_zoom, tzminmax_list, td_list);
+    FASTTILER::TileInfo_py ti(min_zoom, max_zoom, tzminmax_list, td_list);
 
     auto tiles_done = FASTTILER::render_tiles(in_raster, ti, outdir, resume);
 

@@ -50,5 +50,12 @@ set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 #
 ## Add subdirectories
 #add_subdirectory(src/)
-add_subdirectory(sandbox/)
-add_executable(fastgdal2tiles src/fastgdal2tiles.cpp)
+#add_subdirectory(sandbox/)
+add_executable(${PROJECT_NAME} src/fastgdal2tiles.cpp
+        src/src/raster_info.cpp
+        src/include/raster_info.h
+        src/src/fasttiler.cpp
+        src/src/png_io.cpp
+        src/third_party/fpng/fpng.cpp)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE GDAL::GDAL)

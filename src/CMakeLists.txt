@@ -1,6 +1,6 @@
 set(BINDINGS _fastgdal2tiles)
 
-set(SRC_DIR cpp)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SRC_FILES
     ${SRC_DIR}/fast_tile_bindings.cpp

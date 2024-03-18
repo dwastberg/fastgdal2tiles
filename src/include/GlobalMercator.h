@@ -49,18 +49,18 @@ public:
         return std::make_tuple(px, py);
     }
 
-    std::tuple<int, int> PixelsToTile(double px, double py) {
-        int tx = static_cast<int>(std::ceil(px / static_cast<double>(this->tileSize)) - 1);
-        int ty = static_cast<int>(std::ceil(py / static_cast<double>(this->tileSize)) - 1);
+    std::tuple<size_t, size_t> PixelsToTile(double px, double py) {
+        size_t tx = static_cast<size_t>(std::ceil(px / static_cast<double>(this->tileSize)) - 1);
+        size_t ty = static_cast<size_t>(std::ceil(py / static_cast<double>(this->tileSize)) - 1);
         return std::make_tuple(tx, ty);
     }
 
     std::tuple<double, double> PixelsToRaster(double px, double py, int zoom) {
-        int mapSize = this->tileSize << zoom;
+        size_t mapSize = this->tileSize << zoom;
         return std::make_tuple(px, mapSize - py);
     }
 
-    std::tuple<int, int> MetersToTile(double mx, double my, int zoom) {
+    std::tuple<size_t, size_t>  MetersToTile(double mx, double my, int zoom) {
         auto [px, py] = MetersToPixels(mx, my, zoom);
         return PixelsToTile(px, py);
     }
@@ -79,7 +79,7 @@ public:
     }
 
     double Resolution(int zoom) {
-        return this->initialResolution / (1 << zoom);
+        return this->initialResolution / std::pow(2.0, zoom);
     }
 
     int ZoomForPixelSize(double pixelSize) {
@@ -91,8 +91,8 @@ public:
         return 0; // Default to zoom level 0 if something goes wrong
     }
 
-    std::tuple<int, int> GoogleTile(int tx, int ty, int zoom) {
-        return std::make_tuple(tx, (1 << zoom) - 1 - ty);
+    std::tuple<size_t,size_t> GoogleTile(int tx, int ty, int zoom) {
+        return std::make_tuple(tx, static_cast<size_t>(std::pow(2, zoom) - 1 - ty));
     }
 
     std::string QuadTree(int tx, int ty, int zoom) {
