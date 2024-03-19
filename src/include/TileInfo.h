@@ -142,10 +142,8 @@ namespace FASTTILER {
                     tile_id_t tile_id = std::make_tuple(tx, ty, tz);
                     td_map[tile_id] = td;
                     ct++;
-                    std::cout << "Tile " << ct << " of " << tcount << " done" << std::endl;
                 }
             }
-            std::cout << "Tile count: " << td_map.size() << std::endl;
             return td_map;
         }
 
