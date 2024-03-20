@@ -32,7 +32,7 @@ bool is_number(const std::string &s) {
     return true;
 }
 
-pair<size_t,size_t> zoom_levels(string zoom_arg) {
+pair<size_t,size_t> parse_zoom_levels(string zoom_arg) {
 
     if (!isdigit(zoom_arg[0])) {
         throw invalid_argument("Invalid zoom argument");
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 
     if (!zoom_arg.empty()) {
         try {
-            auto zooms = zoom_levels(zoom_arg);
+            auto zooms = parse_zoom_levels(zoom_arg);
             min_zoom = zooms.first;
             max_zoom = zooms.second;
         } catch (const std::invalid_argument &e) {

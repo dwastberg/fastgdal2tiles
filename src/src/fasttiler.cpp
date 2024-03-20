@@ -11,7 +11,6 @@
 #define BANDS 4
 
 #include "BS_thread_pool.hpp"
-#include "logging/Timer.h"
 #include <indicators/cursor_control.hpp>
 #include <indicators/progress_bar.hpp>
 
@@ -61,7 +60,6 @@ namespace FASTTILER {
         std::vector<uint8_t> overview_tile_data((tile_size * tile_size * 4 * BANDS));
         std::vector<uint8_t> subtile_data(tile_size * tile_size * BANDS);
         std::vector<uint8_t> resized_tile_data(tile_size * tile_size * BANDS);
-        DTCC::Timer build_tile_timer("build_overview_tile");
         for (const auto &tile_part: tile_parts) {
             auto subtile_id = tile_part.first;
             auto subtile_pos = tile_part.second;
@@ -85,14 +83,9 @@ namespace FASTTILER {
                 std::copy(subtile_data.begin() + subtile_start, subtile_data.begin() + subtile_end, overview_tile_data.begin() + overview_start);
             }
         }
-        build_tile_timer.stop();
 
-        DTCC::Timer shrink_tile_timer("shrink_overview_tile");
         FASTTILER::IMAGE_PROCESSING::shrink_tile(overview_tile_data, tile_size * 2, BANDS, tile_size, resized_tile_data);
-        shrink_tile_timer.stop();
-        DTCC::Timer write_tile_timer("write_overview_tile");
         PNG_IO::write_png_file(out_img_path.string().c_str(), tile_size, tile_size, BANDS, resized_tile_data);
-        write_tile_timer.stop();
     }
 
     bool render_overview_tiles(size_t tz, const tile_pyramid_t &tile_pyramid, const std::filesystem::path &outdir, bool resume = false, bool progress_bar = true) {
@@ -261,7 +254,6 @@ namespace FASTTILER {
         //
         //        auto td_map = build_td_map(tile_list);
 
-        DTCC::Timer basetile_timer("basetiles");
         const std::filesystem::path out_dir_path(out_dir);
 
         const std::vector<tile_details> tile_list = tile_info.td_vec;
@@ -271,8 +263,6 @@ namespace FASTTILER {
             std::cout << "failed to render basetiles";
             return false;
         }
-        basetile_timer.stop();
-        DTCC::Timer overview_timer("overview");
         for (size_t tz = tile_info.max_zoom - 1; tz >= tile_info.min_zoom; tz--) {
             auto overview_tiles_done = render_overview_tiles(tz, tile_info.tile_pyramid, out_dir_path, resume, progress_bar);
             if (!overview_tiles_done) {
@@ -280,8 +270,6 @@ namespace FASTTILER {
                 return false;
             }
         }
-        overview_timer.stop();
-        // DTCC::Timer::report("render_tiles");
         return true;
     }
 
