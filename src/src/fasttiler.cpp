@@ -257,7 +257,7 @@ namespace FASTTILER {
         return true;
     }
 
-    bool render_tiles(std::string in_raster, const TileInfo &tile_info, std::string out_dir, bool resume, float render_pool_ratio = 0.6) {
+    bool render_tiles(std::string in_raster, const TileInfo &tile_info, std::string out_dir, bool resume, bool progress_bar, float render_pool_ratio) {
         fpng::fpng_init();
         //
         //        auto td_map = build_td_map(tile_list);
@@ -267,7 +267,7 @@ namespace FASTTILER {
 
         const std::vector<tile_details> tile_list = tile_info.td_vec;
 
-        auto basetiles_done = render_basetiles(in_raster, tile_list, out_dir_path, resume, false, render_pool_ratio);
+        auto basetiles_done = render_basetiles(in_raster, tile_list, out_dir_path, resume, progress_bar, render_pool_ratio);
         if (!basetiles_done) {
             std::cout << "failed to render basetiles";
             return false;
@@ -275,7 +275,7 @@ namespace FASTTILER {
         basetile_timer.stop();
         DTCC::Timer overview_timer("overview");
         for (size_t tz = tile_info.max_zoom - 1; tz >= tile_info.min_zoom; tz--) {
-            auto overview_tiles_done = render_overview_tiles(tz, tile_info.tile_pyramid, out_dir_path, resume, false);
+            auto overview_tiles_done = render_overview_tiles(tz, tile_info.tile_pyramid, out_dir_path, resume, progress_bar);
             if (!overview_tiles_done) {
                 std::cout << "failed to render overview tiles";
                 return false;

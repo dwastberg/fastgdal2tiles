@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 //    auto tzminmax = tile_info.build_tzminmax();
 //    auto base_tiles = tile_info.build_tile_details();
 
-    FASTTILER::render_tiles(input_file, tile_info, output_dir, false);
+    FASTTILER::render_tiles(input_file, tile_info, output_dir, false, true, 0.2);
     std::chrono::duration<double> elapsed = std::chrono::high_resolution_clock::now() - start_time;
     auto elapsed_seconds = elapsed / std::chrono::seconds(1);
     std::cout << "Elapsed time: " << std::fixed << std::setprecision(2) << elapsed_seconds << " s\n";
