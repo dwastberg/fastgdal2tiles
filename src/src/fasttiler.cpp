@@ -225,7 +225,6 @@ namespace FASTTILER {
         size_t write_pool_size = total_thread_count - render_pool_size;
         if (write_pool_size == 0)
             write_pool_size = 1;
-        std::cout << "render pool: " << std::to_string(render_pool_size) << " write pool: " << std::to_string(write_pool_size) << std::endl;
 
         BS::thread_pool render_pool(render_pool_size);
         BS::thread_pool write_pool(write_pool_size);

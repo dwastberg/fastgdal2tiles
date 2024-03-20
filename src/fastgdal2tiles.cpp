@@ -17,7 +17,9 @@
 using namespace std;
 
 std::string usage = "Usage: fastgdal2tiles -z <zoom levels> input_file output_dir\n\
-  -z, --zoom <zoom levels>  Zoom levels to render. Can be a single number or a range, e.g. 5-10\n";
+  -z, --zoom <zoom levels>  Zoom levels to render. Can be a single number or a range, e.g. 5-10\n\
+  -q, --quite               Do not output any info\n\
+  -r, --resume              Resume rendering if tiles already exist\n";
 
 
 
@@ -75,9 +77,10 @@ int main(int argc, char *argv[]) {
     int min_zoom = -1;
     int max_zoom = -1;
     string zoom_arg;
+    bool quiet = cmdl[{ "-q", "--quite" }];
+    bool resume = cmdl[{ "-r", "--resume" }];
 
     cmdl({"-z", "--zoom"}) >> zoom_arg;
-    cout << "zoom_arg = " << zoom_arg << "\n";
 
     if (!zoom_arg.empty()) {
         try {
@@ -90,7 +93,6 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-    cout << "min_zoom = " << min_zoom << " max_zoom = " << max_zoom << "\n";
 
     filesystem::path input_file = cmdl[1];
     filesystem::path output_dir = cmdl[2];
@@ -98,19 +100,18 @@ int main(int argc, char *argv[]) {
         cout << "Input file does not exist: " << input_file << "\n";
         return 1;
     }
-    cout << "input_file = " << input_file << " output_dir = " << output_dir << "\n";
 
     auto start_time = chrono::high_resolution_clock::now();
     auto tile_info = FASTTILER::TileInfo(input_file, min_zoom, max_zoom);
 //    auto tzminmax = tile_info.build_tzminmax();
 //    auto base_tiles = tile_info.build_tile_details();
-
-    FASTTILER::render_tiles(input_file, tile_info, output_dir, false, true, 0.2);
+    if (!quiet)
+        std::cout << "Rendering tiles from zoom level " << tile_info.min_zoom << " to " << tile_info.max_zoom << std::endl;
+    FASTTILER::render_tiles(input_file, tile_info, output_dir, resume, !quiet, 0.2);
     std::chrono::duration<double> elapsed = std::chrono::high_resolution_clock::now() - start_time;
     auto elapsed_seconds = elapsed / std::chrono::seconds(1);
-    std::cout << "Elapsed time: " << std::fixed << std::setprecision(2) << elapsed_seconds << " s\n";
+    if (!quiet)
+        std::cout << "Tiles rendered in: " << std::fixed << std::setprecision(2) << elapsed_seconds << " s" << std::endl;
     return 0;
-
-
 
 }
