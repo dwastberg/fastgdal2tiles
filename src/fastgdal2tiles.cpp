@@ -6,6 +6,9 @@
 #include <iostream>
 #include <tuple>
 #include <cctype>
+#include <chrono>
+#include <iomanip>
+
 #include "argh.h"
 
 
@@ -97,11 +100,15 @@ int main(int argc, char *argv[]) {
     }
     cout << "input_file = " << input_file << " output_dir = " << output_dir << "\n";
 
+    auto start_time = chrono::high_resolution_clock::now();
     auto tile_info = FASTTILER::TileInfo(input_file, min_zoom, max_zoom);
 //    auto tzminmax = tile_info.build_tzminmax();
 //    auto base_tiles = tile_info.build_tile_details();
 
     FASTTILER::render_tiles(input_file, tile_info, output_dir, false);
+    std::chrono::duration<double> elapsed = std::chrono::high_resolution_clock::now() - start_time;
+    auto elapsed_seconds = elapsed / std::chrono::seconds(1);
+    std::cout << "Elapsed time: " << std::fixed << std::setprecision(2) << elapsed_seconds << " s\n";
     return 0;
 
 
