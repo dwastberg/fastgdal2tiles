@@ -56,6 +56,14 @@ pair<size_t,size_t> parse_zoom_levels(string zoom_arg) {
     }
 }
 
+size_t total_tiles(FASTTILER::TileInfo &tile_info) {
+    size_t total = tile_info.td_vec.size();
+    for (size_t z = tile_info.min_zoom; z <= tile_info.max_zoom-1; z++) {
+        total += tile_info.tile_pyramid.at(z).size();
+    }
+    return total;
+}
+
 
 int main(int argc, char *argv[]) {
     argh::parser cmdl;
@@ -105,8 +113,11 @@ int main(int argc, char *argv[]) {
     auto tile_info = FASTTILER::TileInfo(input_file, min_zoom, max_zoom);
 //    auto tzminmax = tile_info.build_tzminmax();
 //    auto base_tiles = tile_info.build_tile_details();
-    if (!quiet)
-        std::cout << "Rendering tiles from zoom level " << tile_info.min_zoom << " to " << tile_info.max_zoom << std::endl;
+
+    if (!quiet) {
+        auto total = total_tiles(tile_info);
+        std::cout << "Rendering "<< total << " tiles from zoom level " << tile_info.min_zoom << " to " << tile_info.max_zoom << std::endl;
+    }
     FASTTILER::render_tiles(input_file, tile_info, output_dir, resume, !quiet, 0.2);
     std::chrono::duration<double> elapsed = std::chrono::high_resolution_clock::now() - start_time;
     auto elapsed_seconds = elapsed / std::chrono::seconds(1);

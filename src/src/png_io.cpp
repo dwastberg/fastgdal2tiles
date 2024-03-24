@@ -25,7 +25,7 @@ namespace FASTTILER::PNG_IO {
         return FASTTILER::PNG_IO::write_png_file(out_path.c_str(), width, height, bands, img_data);
     }
     bool write_tile(const std::vector<uint8_t> &img_data, size_t in_width, size_t in_height, size_t out_width, size_t out_height, size_t x_offset, size_t y_offset, size_t bands, const std::string &out_path) {
-        std::__1::vector<uint8_t> offset_img(out_width * out_height * bands);
+        std::vector<uint8_t> offset_img(out_width * out_height * bands);
 
         const size_t initial_offset = ((y_offset * out_width) + x_offset) * bands;
 
