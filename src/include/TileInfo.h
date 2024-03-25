@@ -244,7 +244,7 @@ namespace FASTTILER {
                                         tileposx = tile_size;
                                     }
 
-                                    tile_pos_t tile_pos = std::make_tuple(tileposx, tileposy);
+                                    tile_pos_t tile_pos = std::make_pair(tileposx, tileposy);
                                     tile_pyramid[tz][low_tile_id].push_back(std::make_pair(tile_id, tile_pos));
                                 }
                             }
